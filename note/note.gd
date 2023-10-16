@@ -87,7 +87,13 @@ var show_end_handle : bool:
 
 # ???
 #@onready var player : AudioStreamPlayer = get_tree().current_scene.find_child("AudioStreamPlayer")
-
+### Dew's variables ###
+var starting_note : Array
+var added : bool
+var deleted : bool
+var dragged : bool
+var click := false
+### Dew's variables ###
 
 func _ready():
 	for handle in [bar_handle, pitch_handle, end_handle]:
@@ -114,8 +120,19 @@ func _gui_input(event):
 	
 	if key != null && key.pressed:
 		match key.keycode:
-			KEY_DELETE, KEY_BACKSPACE: queue_free()
-	
+			KEY_DELETE, KEY_BACKSPACE:
+				
+				#Dew deleted note storage
+				deleted = true
+				print("that's deleting")
+				Global.revision += 1
+				Global.a_array.append(Global.ratio)
+				Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
+				print("current revision: ",Global.revision)
+				###
+				
+				
+				queue_free()
 
 
 func _on_handle_input(event, which_handle):
@@ -126,10 +143,27 @@ func _on_handle_input(event, which_handle):
 	if event == null: return
 	if event.pressed: match event.button_index:
 		MOUSE_BUTTON_LEFT:
+			
+			#Dew initiate note creation to avoid hell
+			if !click :
+				starting_note = [bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta]
+				click = true
+			###
+			
 			dragging = which_handle
 			drag_helper.init_drag()
 			chart.doot(pitch_start if which_handle != DRAG_END else end_pitch)
 		MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT:
+			
+			#Dew deleted note storage
+			deleted = true
+			print("that's deleting")
+			Global.revision += 1
+			Global.a_array.append(Global.ratio)
+			Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
+			print("current revision: ",Global.revision)
+			###
+			
 			queue_free()
 
 
@@ -144,8 +178,20 @@ func _process_drag():
 	
 	match dragging:
 		DRAG_BAR: # → float
+			
+			#Dew debug statement
+			dragged = true
+			print("that bar's dragging")
+			###
+			
 			bar = drag_result
 		DRAG_PITCH:  # → float
+			
+			#Dew debug statement
+			dragged = true
+			print("that pitch's dragging")
+			###
+			
 			pitch_start = drag_result
 			
 			doot_enabled = false
@@ -155,9 +201,21 @@ func _process_drag():
 				pitch_delta = -(13 * Global.SEMITONE) - pitch_start
 			doot_enabled = true
 		DRAG_END: # → Vector2
+			
+			#Dew debug statement
+			dragged = true
+			print("that end's dragging")
+			###
+			
 			length = drag_result.x
 			pitch_delta = drag_result.y
 		DRAG_INITIAL: # → Vector2
+			
+			#Dew debug statement
+			added = true
+			print("that's a new note")
+			###
+			
 			pitch_start = drag_result.y
 			# editing notes butted up against each other would be too annoying
 			# if we did this check first
@@ -171,6 +229,25 @@ func _process_drag():
 
 func _end_drag():
 	dragging = DRAG_NONE
+	
+	#Dew note-changed check + effected drag-recording
+	click = false
+	#print("prior revision: ",Global.revision)
+	var proper_note : Array = [bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta]
+	#print(starting_note)
+	#print(proper_note)
+	if starting_note != proper_note :
+		if dragged:
+			Global.revision += 1
+			Global.a_array.append(Global.respects)
+			Global.d_array.append(starting_note.duplicate(true))
+		if added:
+			Global.revision += 1
+			Global.a_array.append(proper_note.duplicate(true))
+			Global.d_array.append(Global.ratio)
+	print("current revision: ",Global.revision)
+	###
+	
 	slide_helper.snap_near_pitches()
 	if !Input.is_key_pressed(KEY_ALT):
 		slide_helper.pass_on_slide_propagation()
