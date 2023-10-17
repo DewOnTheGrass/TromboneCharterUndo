@@ -53,6 +53,7 @@ func doot(pitch:float):
 
 
 func _ready():
+	
 	bar_font = measure_font.duplicate()
 	main.chart_loaded.connect(_on_tmb_loaded)
 	Global.tmb_updated.connect(_on_tmb_updated)
@@ -169,6 +170,7 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	
 	#Dew remove overwritten future undo/redo chain
 	if Global.UR[2] > 0 :
+		Global.history = Global.history.slice(0,Global.revision,1,true)
 		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
 		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
 	###
@@ -230,12 +232,23 @@ func update_note_array():
 		print(note_array)
 		new_array.append(note_array)
 	#Dew debug and list of note starts with changes(bar_array) 
-		bar_array.append(note_array[0])
-		bar_array.sort()
+		#bar_array.append(note_array[0])
+		#bar_array.sort()
+		bar_array = [note_array[0]]
 		Global.main_stack = new_array
 	print("added notes: ",Global.a_array)
 	print("deleted notes: ",Global.d_array)
 	print("Global.main_stack: ",Global.main_stack)
+	print("Notes Dictionary: ", Global.relevant_notes)
+	print(Global.revision)
+	var da_note = Global.relevant_notes.find_key(bar_array[0])
+	print(da_note)
+	print("da_note type: ",typeof(da_note))
+	print("%Chart type: ",typeof(%Chart))
+	print(%Chart.get_children())
+	da_note.queue_free()
+	print("bar_array: ",bar_array)
+	return
 	###
 	
 	new_array.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
@@ -279,11 +292,10 @@ func UR_handler():
 			elif Global.a_array[Global.revision-1] == Global.ratio:
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
-				Global.main_stack.append(passed_note)
 				Global.revision -= 1
 				Global.UR[0] = 0
 				Global.UR[2] += 1
-		print(Global.main_stack)
+		print("Global.main_stack: ",Global.main_stack)
 		dumb_copy = Global.main_stack
 		dumb_copy.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
 		tmb.notes = dumb_copy
@@ -327,6 +339,7 @@ func UR_handler():
 	Global.UR[0] = 0
 	_on_tmb_updated()
 ###
+
 
 func _draw():
 	var font : Font = ThemeDB.get_fallback_font()

@@ -125,6 +125,8 @@ func _gui_input(event):
 				#Dew deleted note storage
 				deleted = true
 				print("that's deleting")
+				Global.history.append(self.duplicate(true))
+				Global.relevant_notes[self] = self.bar
 				Global.revision += 1
 				Global.a_array.append(Global.ratio)
 				Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
@@ -146,6 +148,7 @@ func _on_handle_input(event, which_handle):
 			
 			#Dew initiate note creation to avoid hell
 			if !click :
+				Global.old_note = self
 				starting_note = [bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta]
 				click = true
 			###
@@ -155,9 +158,11 @@ func _on_handle_input(event, which_handle):
 			chart.doot(pitch_start if which_handle != DRAG_END else end_pitch)
 		MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT:
 			
-			#Dew deleted note storage
+			#Dew deleted note storage (self)
 			deleted = true
 			print("that's deleting")
+			Global.history.append(self.duplicate(true))
+			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(Global.ratio)
 			Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
@@ -175,7 +180,7 @@ func _process_drag():
 	var drag_result = drag_helper.process_drag(dragging)
 	# drag result will come back null if drag rejected due to note overlap
 	if drag_result == null: return
-	
+	Global.old_note = self
 	match dragging:
 		DRAG_BAR: # → float
 			
@@ -238,10 +243,14 @@ func _end_drag():
 	#print(proper_note)
 	if starting_note != proper_note :
 		if dragged:
+			Global.history.append(Global.old_note)
+			Global.relevant_notes[Global.old_note] = Global.old_note.bar
 			Global.revision += 1
 			Global.a_array.append(Global.respects)
 			Global.d_array.append(starting_note.duplicate(true))
 		if added:
+			Global.history.append(self.duplicate(true))
+			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(proper_note.duplicate(true))
 			Global.d_array.append(Global.ratio)
