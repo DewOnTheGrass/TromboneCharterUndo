@@ -42,6 +42,7 @@ var bar_array := [] #list of bars
 var drag_available := false
 var short_stack = 0
 var prev_bar #bar of clearable note
+var hold = false
 ###
 
 func doot(pitch:float):
@@ -236,19 +237,6 @@ func update_note_array():
 		#bar_array.sort()
 		bar_array = [note_array[0]]
 		Global.main_stack = new_array
-	print("added notes: ",Global.a_array)
-	print("deleted notes: ",Global.d_array)
-	print("Global.main_stack: ",Global.main_stack)
-	print("Notes Dictionary: ", Global.relevant_notes)
-	print(Global.revision)
-	var da_note = Global.relevant_notes.find_key(bar_array[0])
-	print(da_note)
-	print("da_note type: ",typeof(da_note))
-	print("%Chart type: ",typeof(%Chart))
-	print(%Chart.get_children())
-	da_note.queue_free()
-	print("bar_array: ",bar_array)
-	return
 	###
 	
 	new_array.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
@@ -274,24 +262,39 @@ func UR_handler():
 		if Global.revision > 1:
 			if Global.a_array[Global.revision-2] == Global.respects :
 				print("undo dragged")
+				
 				passed_note = Global.d_array[Global.revision-2]
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
 				Global.main_stack.append(passed_note)
+				
+				Global.history[Global.revision-1].queue_free()
+				%Chart.add_child(Global.history[Global.revision-2])
+				
 				Global.revision -= 2
 				Global.UR[0] = 0
 				Global.UR[2] += 1
 				drag_UR = true
+				
 		if !drag_UR :
 			if Global.d_array[Global.revision-1] == Global.ratio:
 				print("undo added")
+				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
+				print(Global.history[Global.revision-1])
+				
+				Global.history[Global.revision-1].queue_free()
+				
 				Global.revision -= 1
 				Global.UR[0] = 0
 				Global.UR[2] += 1
 			
 			elif Global.a_array[Global.revision-1] == Global.ratio:
 				print("undo deleted")
+				
 				passed_note = Global.d_array[Global.revision-1]
+				
+				%Chart.add_child(Global.history[Global.revision-1])
+				
 				Global.revision -= 1
 				Global.UR[0] = 0
 				Global.UR[2] += 1
@@ -305,9 +308,14 @@ func UR_handler():
 		if Global.UR[1] == 2 :
 			if Global.a_array[Global.revision] == Global.respects :
 				print("redo dragged")
+				
 				passed_note = Global.a_array[Global.revision+1]
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				Global.main_stack.append(passed_note)
+				
+				Global.history[Global.revision].queue_free
+				%Chart.add_child(Global.history[Global.revision+1])
+				
 				Global.revision += 2
 				Global.UR[2] -= 1
 				drag_UR = true
@@ -315,14 +323,22 @@ func UR_handler():
 		if Global.UR[1] != 0 && !drag_UR :
 			if Global.d_array[Global.revision] == Global.ratio :
 				print("redo added")
+				
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
+				
+				%Chart.add_child(Global.history[Global.revision])
+				
 				Global.revision += 1
 				Global.UR[2] -= 1
 		
 			elif Global.a_array[Global.revision] == Global.ratio :
 				print("redo deleted")
+				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
+				
+				Global.history[Global.revision].queue_free()
+				
 				Global.revision += 1
 				Global.UR[2] -= 1
 				
@@ -337,6 +353,8 @@ func UR_handler():
 	print("tmb.notes: ",tmb.notes)
 	
 	Global.UR[0] = 0
+	print(Global.history)
+	print(%Chart.get_children())
 	_on_tmb_updated()
 ###
 

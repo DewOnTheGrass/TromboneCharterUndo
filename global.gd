@@ -42,6 +42,7 @@ var d_array := []
 var main_stack := []
 
 var history := []
+var references := []
 var relevant_notes = {}
 ### Dew's variables ###
 
