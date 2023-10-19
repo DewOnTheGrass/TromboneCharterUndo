@@ -43,6 +43,7 @@ var drag_available := false
 var short_stack = 0
 var prev_bar #bar of clearable note
 var hold = false
+var passed_note := []
 ###
 
 func doot(pitch:float):
@@ -187,6 +188,7 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	if doot_enabled: doot(pitch)
 	add_child(new_note)
 	new_note.grab_focus()
+	passed_note = []
 
 # !! unused
 func stepped_note_overlaps(time:float, length:float, exclude : Array = []) -> bool:
@@ -255,7 +257,7 @@ func update_note_array():
 #Also Dew's undo/redo handler.
 func UR_handler():
 	print("UR!!! ",Global.UR[0])
-	var passed_note = []
+	passed_note = []
 	var drag_UR = false
 	if Global.UR[0] == 1 :
 		print("UR Undo! ")
@@ -267,8 +269,7 @@ func UR_handler():
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
 				Global.main_stack.append(passed_note)
 				
-				Global.history[Global.revision-1].queue_free()
-				%Chart.add_child(Global.history[Global.revision-2])
+				Global.reference[Global.revision-1].queue_free()
 				
 				Global.revision -= 2
 				Global.UR[0] = 0
@@ -280,9 +281,9 @@ func UR_handler():
 				print("undo added")
 				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
-				print(Global.history[Global.revision-1])
+				print(Global.reference[Global.revision-1])
 				
-				Global.history[Global.revision-1].queue_free()
+				Global.reference[Global.revision-1].queue_free()
 				
 				Global.revision -= 1
 				Global.UR[0] = 0
@@ -292,8 +293,6 @@ func UR_handler():
 				print("undo deleted")
 				
 				passed_note = Global.d_array[Global.revision-1]
-				
-				%Chart.add_child(Global.history[Global.revision-1])
 				
 				Global.revision -= 1
 				Global.UR[0] = 0
@@ -313,8 +312,7 @@ func UR_handler():
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				Global.main_stack.append(passed_note)
 				
-				Global.history[Global.revision].queue_free
-				%Chart.add_child(Global.history[Global.revision+1])
+				Global.reference[Global.revision].queue_free
 				
 				Global.revision += 2
 				Global.UR[2] -= 1
@@ -327,8 +325,6 @@ func UR_handler():
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
 				
-				%Chart.add_child(Global.history[Global.revision])
-				
 				Global.revision += 1
 				Global.UR[2] -= 1
 		
@@ -337,7 +333,7 @@ func UR_handler():
 				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				
-				Global.history[Global.revision].queue_free()
+				Global.reference[Global.revision].queue_free()
 				
 				Global.revision += 1
 				Global.UR[2] -= 1
@@ -355,7 +351,9 @@ func UR_handler():
 	Global.UR[0] = 0
 	print(Global.history)
 	print(%Chart.get_children())
-	_on_tmb_updated()
+	if passed_note != []:
+		add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
+	else: _on_tmb_updated()
 ###
 
 
