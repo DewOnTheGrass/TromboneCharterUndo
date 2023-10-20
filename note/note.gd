@@ -125,7 +125,7 @@ func _gui_input(event):
 				#Dew deleted note storage
 				deleted = true
 				print("that's deleting")
-				Global.history.append(self.duplicate(true))
+				Global.history.append(self)
 				Global.relevant_notes[self] = self.bar
 				Global.revision += 1
 				Global.a_array.append(Global.ratio)
@@ -161,7 +161,7 @@ func _on_handle_input(event, which_handle):
 			#Dew deleted note storage (self)
 			deleted = true
 			print("that's deleting")
-			Global.history.append(self.duplicate(true))
+			Global.history.append(self)
 			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(Global.ratio)
@@ -249,7 +249,7 @@ func _end_drag():
 			Global.a_array.append(Global.respects)
 			Global.d_array.append(starting_note.duplicate(true))
 		if added:
-			Global.history.append(self.duplicate(true))
+			Global.history.append(self)
 			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(proper_note.duplicate(true))
@@ -388,4 +388,6 @@ func _exit_tree():
 	bar = -69420.0
 	if chart.clearing_notes: return
 	update_touching_notes()
-	chart.update_note_array()
+	if Global.please_come_back:
+		return
+	else: chart.update_note_array()

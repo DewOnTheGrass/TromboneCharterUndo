@@ -42,6 +42,7 @@ var bar_array := [] #list of bars
 var drag_available := false
 var short_stack = 0
 var prev_bar #bar of clearable note
+var reappearing_note = false
 ###
 
 func doot(pitch:float):
@@ -71,6 +72,13 @@ func _on_scroll_change():
 	redraw_notes()
 	%WavePreview.calculate_width()
 
+#Dew: Please come back from _exit_tree after removing child note from chart! I added a condition there and everything...
+func filicide(child):
+	Global.please_come_back = true
+	%Chart.remove_child(child)
+	Global.please_come_back = false
+###
+
 #Dew undo/redo-input handler
 func _unhandled_key_input(event):
 	var shift = event as InputEventWithModifiers
@@ -86,7 +94,6 @@ func _unhandled_key_input(event):
 		print("redo!")
 		if short_stack == 1 :
 			Global.UR[1] = 1
-		
 		update_note_array()
 ###
 
@@ -169,12 +176,11 @@ func _on_tmb_loaded():
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
 	
 	#Dew remove overwritten future undo/redo chain
-	if Global.UR[2] > 0 :
+	if Global.UR[2] > 0 && reappearing_note == false :
 		Global.history = Global.history.slice(0,Global.revision,1,true)
 		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
 		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
 	###
-	
 	var new_note : Note = note_scn.instantiate()
 	new_note.bar = bar
 	new_note.length = length
@@ -185,7 +191,8 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	new_note.dragging = Note.DRAG_INITIAL if start_drag else Note.DRAG_NONE
 	if doot_enabled: doot(pitch)
 	add_child(new_note)
-	new_note.grab_focus()
+	#new_note.grab_focus()
+	if reappearing_note == true: return
 
 # !! unused
 func stepped_note_overlaps(time:float, length:float, exclude : Array = []) -> bool:
@@ -236,19 +243,18 @@ func update_note_array():
 		#bar_array.sort()
 		bar_array = [note_array[0]]
 		Global.main_stack = new_array
-	print("added notes: ",Global.a_array)
-	print("deleted notes: ",Global.d_array)
-	print("Global.main_stack: ",Global.main_stack)
-	print("Notes Dictionary: ", Global.relevant_notes)
-	print(Global.revision)
-	var da_note = Global.relevant_notes.find_key(bar_array[0])
-	print(da_note)
-	print("da_note type: ",typeof(da_note))
-	print("%Chart type: ",typeof(%Chart))
-	print(%Chart.get_children())
-	da_note.queue_free()
-	print("bar_array: ",bar_array)
-	return
+	if false:
+		print("Notes Dictionary: ", Global.history)
+		print(Global.revision)
+		var da_note = Global.relevant_notes.find_key(bar_array[0])
+		print(da_note)
+		print("da_note type: ",typeof(da_note))
+		print("%Chart type: ",typeof(%Chart))
+		print(%Chart.get_children())
+		filicide(da_note)
+		print("bar_array: ",bar_array)
+		print(%Chart.get_children())
+	
 	###
 	
 	new_array.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
@@ -267,8 +273,11 @@ func update_note_array():
 #Also Dew's undo/redo handler.
 func UR_handler():
 	print("UR!!! ",Global.UR[0])
+	print("Global.a_array: ", Global.a_array)
+	print("Global.d_array: ", Global.d_array)
 	var passed_note = []
 	var drag_UR = false
+	var old_note : Note
 	if Global.UR[0] == 1 :
 		print("UR Undo! ")
 		if Global.revision > 1:
@@ -276,7 +285,13 @@ func UR_handler():
 				print("undo dragged")
 				passed_note = Global.d_array[Global.revision-2]
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
+				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
+				
+				reappearing_note = true
+				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
+				reappearing_note = false
+				
 				Global.revision -= 2
 				Global.UR[0] = 0
 				Global.UR[2] += 1
@@ -285,6 +300,7 @@ func UR_handler():
 			if Global.d_array[Global.revision-1] == Global.ratio:
 				print("undo added")
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
+				filicide(Global.history[Global.revision-1])
 				Global.revision -= 1
 				Global.UR[0] = 0
 				Global.UR[2] += 1
@@ -292,10 +308,14 @@ func UR_handler():
 			elif Global.a_array[Global.revision-1] == Global.ratio:
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
+				
+				reappearing_note = true
+				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
+				reappearing_note = false
+				
 				Global.revision -= 1
 				Global.UR[0] = 0
 				Global.UR[2] += 1
-		print("Global.main_stack: ",Global.main_stack)
 		dumb_copy = Global.main_stack
 		dumb_copy.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
 		tmb.notes = dumb_copy
@@ -307,7 +327,13 @@ func UR_handler():
 				print("redo dragged")
 				passed_note = Global.a_array[Global.revision+1]
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
+				filicide(Global.history[Global.revision])
 				Global.main_stack.append(passed_note)
+				
+				reappearing_note = true
+				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
+				reappearing_note = false
+				
 				Global.revision += 2
 				Global.UR[2] -= 1
 				drag_UR = true
@@ -317,12 +343,18 @@ func UR_handler():
 				print("redo added")
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
+				
+				reappearing_note = true
+				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
+				reappearing_note = false
+				
 				Global.revision += 1
 				Global.UR[2] -= 1
 		
 			elif Global.a_array[Global.revision] == Global.ratio :
 				print("redo deleted")
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
+				filicide(Global.history[Global.revision])
 				Global.revision += 1
 				Global.UR[2] -= 1
 				
@@ -331,7 +363,9 @@ func UR_handler():
 		dumb_copy = Global.main_stack.slice(0,Global.revision)
 		dumb_copy.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
 		tmb.notes = dumb_copy
-		
+	
+	print("Global.a_array: ", Global.a_array)
+	print("Global.d_array: ", Global.d_array)
 	print("revision post-UR: ",Global.revision)
 	print("Global.main_stack: ",Global.main_stack)
 	print("tmb.notes: ",tmb.notes)
