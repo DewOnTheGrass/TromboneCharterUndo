@@ -189,6 +189,7 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	new_note.position.x = bar_to_x(bar)
 	new_note.position.y = pitch_to_height(pitch)
 	new_note.dragging = Note.DRAG_INITIAL if start_drag else Note.DRAG_NONE
+	
 	if doot_enabled: doot(pitch)
 	add_child(new_note)
 	#new_note.grab_focus()
@@ -273,8 +274,7 @@ func update_note_array():
 #Also Dew's undo/redo handler.
 func UR_handler():
 	print("UR!!! ",Global.UR[0])
-	print("Global.a_array: ", Global.a_array)
-	print("Global.d_array: ", Global.d_array)
+	print("pre-history: ",Global.history)
 	var passed_note = []
 	var drag_UR = false
 	var old_note : Note
@@ -353,6 +353,7 @@ func UR_handler():
 		
 			elif Global.a_array[Global.revision] == Global.ratio :
 				print("redo deleted")
+				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				filicide(Global.history[Global.revision])
 				Global.revision += 1
@@ -364,11 +365,9 @@ func UR_handler():
 		dumb_copy.sort_custom(func(a,b): return a[TMBInfo.NOTE_BAR] < b[TMBInfo.NOTE_BAR])
 		tmb.notes = dumb_copy
 	
-	print("Global.a_array: ", Global.a_array)
-	print("Global.d_array: ", Global.d_array)
+	print("post-history: ",Global.history)
+	print("final note: ",%Chart.get_child(%Chart.get_child_count()-1))
 	print("revision post-UR: ",Global.revision)
-	print("Global.main_stack: ",Global.main_stack)
-	print("tmb.notes: ",tmb.notes)
 	
 	Global.UR[0] = 0
 	_on_tmb_updated()
