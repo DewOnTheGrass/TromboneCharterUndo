@@ -28,3 +28,8 @@ window/size/viewport_width=1280
 window/size/viewport_height=540
 window/subwindows/embed_subwindows=false
 window/dpi/allow_hidpi=false
+
+[editor]
+
+movie_writer/movie_file="C:/Users/hagan/Desktop/gaming.avi"
+movie_writer/fps=30

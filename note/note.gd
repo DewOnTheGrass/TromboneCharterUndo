@@ -90,7 +90,6 @@ var show_end_handle : bool:
 ### Dew's variables ###
 var starting_note : Array
 var added : bool
-var deleted : bool
 var dragged : bool
 var click := false
 ### Dew's variables ###
@@ -113,6 +112,10 @@ func _ready():
 
 func _process(_delta):
 	if dragging: _process_drag()
+	if Global.deleted: 
+		Global.please_come_back = true
+		remove_child(self)
+		Global.please_come_back = false
 
 
 func _gui_input(event):
@@ -122,18 +125,18 @@ func _gui_input(event):
 		match key.keycode:
 			KEY_DELETE, KEY_BACKSPACE:
 				
-				#Dew deleted note storage
-				deleted = true
+				#Dew stores note without deleting yet!!!!!
+				Global.deleted = true
 				print("that's deleting")
 				Global.history.append(self)
+				Global.h_dict[self] = Global.revision
 				Global.revision += 1
 				Global.a_array.append(Global.ratio)
 				Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
 				print("current revision: ",Global.revision)
+				Global.d_note = self
+				chart.update_note_array()
 				###
-				
-				
-				queue_free()
 
 
 func _on_handle_input(event, which_handle):
@@ -147,9 +150,10 @@ func _on_handle_input(event, which_handle):
 			
 			#Dew initiate note creation to avoid hell
 			if !click :
+				click = true
 				Global.old_note = self
 				starting_note = [bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta]
-				click = true
+					
 			###
 			
 			dragging = which_handle
@@ -158,16 +162,17 @@ func _on_handle_input(event, which_handle):
 		MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_RIGHT:
 			
 			#Dew deleted note storage (self)
-			deleted = true
+			Global.deleted = true
 			print("that's deleting")
 			Global.history.append(self)
+			Global.h_dict[self] = Global.revision
 			Global.revision += 1
 			Global.a_array.append(Global.ratio)
 			Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
 			print("current revision: ",Global.revision)
+			Global.d_note = self
+			chart.update_note_array()
 			###
-			
-			queue_free()
 
 
 func _process_drag():
@@ -242,11 +247,13 @@ func _end_drag():
 	if starting_note != proper_note :
 		if dragged:
 			Global.history.append(Global.old_note)
+			Global.h_dict[Global.old_note] = Global.revision
 			Global.revision += 1
 			Global.a_array.append(Global.respects)
 			Global.d_array.append(starting_note.duplicate(true))
 		if added:
 			Global.history.append(self)
+			Global.h_dict[self] = Global.revision
 			Global.revision += 1
 			Global.a_array.append(proper_note.duplicate(true))
 			Global.d_array.append(Global.ratio)
@@ -378,7 +385,6 @@ func _draw():
 	if !is_tap_note || has_focus():_draw_tail.call()
 	if show_bar_handle: _draw_bar_handle.call()
 	if show_end_handle: _draw_end_handle.call()
-
 
 func _exit_tree():
 	bar = -69420.0

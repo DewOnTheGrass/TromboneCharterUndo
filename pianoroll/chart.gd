@@ -35,7 +35,6 @@ func bar_to_x(bar:float): return bar * bar_spacing
 	get: return Global.working_tmb
 
 ###Dew's variables###
-var new_note : Note
 var new_array := []
 var dumb_copy := []
 var short_stack = 0
@@ -43,6 +42,7 @@ var short_stack = 0
 
 func doot(pitch:float):
 	if !doot_enabled || %PreviewController.is_playing: return
+	@warning_ignore("static_called_on_instance")
 	player.pitch_scale = Global.pitch_to_scale(pitch / Global.SEMITONE)
 	player.play()
 	await(get_tree().create_timer(0.1).timeout)
@@ -70,6 +70,7 @@ func _on_scroll_change():
 
 #Dew: Please come back from _exit_tree after removing child note from chart! I added a condition there and everything...
 func filicide(child):
+	Global.deleted = false
 	Global.please_come_back = true
 	%Chart.remove_child(child)
 	Global.please_come_back = false
@@ -177,15 +178,19 @@ func _on_tmb_loaded():
 	doot_enabled = %DootToggle.button_pressed
 	_on_tmb_updated()
 
-func add_note_scn(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
-	var new_note : Note = note_scn.instantiate()
-	new_note.bar = bar
-	new_note.length = length
-	new_note.pitch_start = pitch
-	new_note.pitch_delta = pitch_delta
-	new_note.position.x = bar_to_x(bar)
-	new_note.position.y = pitch_to_height(pitch)
-	new_note.dragging = Note.DRAG_INITIAL if start_drag else Note.DRAG_NONE
+func stuff_note(child_note, data_array):
+	child_note.bar = data_array[0]
+	child_note.length = data_array[1]
+	child_note.pitch_start = data_array[2]
+	child_note.pitch_delta = data_array[3]
+	child_note.position.x = bar_to_x(data_array[0])
+	child_note.position.y = pitch_to_height(data_array[2])
+	child_note.dragging = Note.DRAG_NONE
+	
+	if doot_enabled: doot(data_array[2])
+	add_child(child_note)
+	child_note.grab_focus()
+	
 
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
 	
@@ -236,8 +241,11 @@ func continuous_note_overlaps(time:float, length:float, exclude : Array = []) ->
 
 
 func update_note_array():
+	if Global.deleted:
+		filicide(Global.d_note)
 	new_array = []
 	print("Hi, I'm Tom Scott, and today I'm here in func update_note_array()")
+	print(Global.h_dict)
 	for note in get_children():
 		
 		#Dew add check for undo/redo
@@ -286,7 +294,7 @@ func UR_handler():
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				add_child(Global.history[Global.revision-2])
+				stuff_note(Global.history[Global.revision-2],passed_note)
 				
 				Global.revision -= 2
 				Global.UR[0] = 0
@@ -305,7 +313,7 @@ func UR_handler():
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
 				
-				add_child(Global.history[Global.revision-1])
+				stuff_note(Global.history[Global.revision-1],passed_note)
 				
 				Global.revision -= 1
 				Global.UR[0] = 0
@@ -324,7 +332,7 @@ func UR_handler():
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				add_child(Global.history[Global.revision+1])
+				stuff_note(Global.history[Global.revision+1],passed_note)
 				
 				Global.revision += 2
 				Global.UR[2] -= 1
@@ -335,16 +343,14 @@ func UR_handler():
 				print("redo added")
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
-				var child : Note = note_scn.instantiate()
-				child = Global.history[Global.revision]
-				add_child(child)
+				
+				stuff_note(Global.history[Global.revision],passed_note)
 				
 				Global.revision += 1
 				Global.UR[2] -= 1
 		
 			elif Global.a_array[Global.revision] == Global.ratio :
 				print("redo deleted")
-				
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				filicide(Global.history[Global.revision])
 				Global.revision += 1

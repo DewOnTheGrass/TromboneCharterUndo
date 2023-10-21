@@ -43,6 +43,9 @@ var main_stack := []
 
 var history := []
 var please_come_back = false
+var deleted = false
+var d_note : Note
+var h_dict := {}
 ### Dew's variables ###
 
 # shamelessly copied from wikiped https://en.wikipedia.org/wiki/Smoothstep#Variations
