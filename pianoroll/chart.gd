@@ -35,10 +35,10 @@ func bar_to_x(bar:float): return bar * bar_spacing
 	get: return Global.working_tmb
 
 ###Dew's variables###
+var new_note : Note
 var new_array := []
 var dumb_copy := []
 var short_stack = 0
-var reappearing_note = false
 ###
 
 func doot(pitch:float):
@@ -177,6 +177,15 @@ func _on_tmb_loaded():
 	doot_enabled = %DootToggle.button_pressed
 	_on_tmb_updated()
 
+func add_note_scn(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
+	var new_note : Note = note_scn.instantiate()
+	new_note.bar = bar
+	new_note.length = length
+	new_note.pitch_start = pitch
+	new_note.pitch_delta = pitch_delta
+	new_note.position.x = bar_to_x(bar)
+	new_note.position.y = pitch_to_height(pitch)
+	new_note.dragging = Note.DRAG_INITIAL if start_drag else Note.DRAG_NONE
 
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
 	
@@ -196,7 +205,7 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	
 	if doot_enabled: doot(pitch)
 	add_child(new_note)
-	#new_note.grab_focus()
+	new_note.grab_focus()
 
 # !! unused
 func stepped_note_overlaps(time:float, length:float, exclude : Array = []) -> bool:
@@ -256,7 +265,8 @@ func update_note_array():
 	if Global.UR[0] > 0 :
 		UR_handler()
 	else :
-		_do_tmb_update()
+		queue_redraw()
+		redraw_notes()
 	###
 	
 #Dew's closest he will ever get to yandev levels of if/then incompetence
@@ -276,7 +286,7 @@ func UR_handler():
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				%Chart.add_child(Global.history[Global.revision-2])
+				add_child(Global.history[Global.revision-2])
 				
 				Global.revision -= 2
 				Global.UR[0] = 0
@@ -295,7 +305,7 @@ func UR_handler():
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
 				
-				%Chart.add_child(Global.history[Global.revision-1])
+				add_child(Global.history[Global.revision-1])
 				
 				Global.revision -= 1
 				Global.UR[0] = 0
@@ -314,7 +324,7 @@ func UR_handler():
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				%Chart.add_child(Global.history[Global.revision+1])
+				add_child(Global.history[Global.revision+1])
 				
 				Global.revision += 2
 				Global.UR[2] -= 1
@@ -325,8 +335,9 @@ func UR_handler():
 				print("redo added")
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
-				
-				%Chart.add_child(Global.history[Global.revision])
+				var child : Note = note_scn.instantiate()
+				child = Global.history[Global.revision]
+				add_child(child)
 				
 				Global.revision += 1
 				Global.UR[2] -= 1
@@ -346,7 +357,7 @@ func UR_handler():
 		tmb.notes = dumb_copy
 	
 	print("post-history: ",Global.history)
-	print("final note: ",%Chart.get_child(%Chart.get_child_count()-1))
+	print("chart: ",%Chart.get_children())
 	print("revision post-UR: ",Global.revision)
 	
 	Global.UR[0] = 0

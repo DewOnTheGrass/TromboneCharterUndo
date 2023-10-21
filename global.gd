@@ -42,7 +42,6 @@ var d_array := []
 var main_stack := []
 
 var history := []
-var relevant_notes = {}
 var please_come_back = false
 ### Dew's variables ###
 
