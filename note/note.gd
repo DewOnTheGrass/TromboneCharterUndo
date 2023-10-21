@@ -126,7 +126,6 @@ func _gui_input(event):
 				deleted = true
 				print("that's deleting")
 				Global.history.append(self)
-				Global.relevant_notes[self] = self.bar
 				Global.revision += 1
 				Global.a_array.append(Global.ratio)
 				Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
@@ -162,7 +161,6 @@ func _on_handle_input(event, which_handle):
 			deleted = true
 			print("that's deleting")
 			Global.history.append(self)
-			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(Global.ratio)
 			Global.d_array.append([bar,length,pitch_start,pitch_delta,pitch_start+pitch_delta])
@@ -244,13 +242,11 @@ func _end_drag():
 	if starting_note != proper_note :
 		if dragged:
 			Global.history.append(Global.old_note)
-			Global.relevant_notes[Global.old_note] = Global.old_note.bar
 			Global.revision += 1
 			Global.a_array.append(Global.respects)
 			Global.d_array.append(starting_note.duplicate(true))
 		if added:
 			Global.history.append(self)
-			Global.relevant_notes[self] = self.bar
 			Global.revision += 1
 			Global.a_array.append(proper_note.duplicate(true))
 			Global.d_array.append(Global.ratio)
