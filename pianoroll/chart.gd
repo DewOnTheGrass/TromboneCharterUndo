@@ -77,7 +77,16 @@ func filicide(child):
 	Global.please_come_back = true
 	%Chart.remove_child(child)
 	Global.please_come_back = false
+	return
 ###
+	#Dew remove future undo/redo chain when overwritten
+func redo_check():
+	if Global.UR[2] > 0 :
+		Global.history = Global.history.slice(0,Global.revision,1,true)
+		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
+		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
+	return
+	###
 
 #Dew undo/redo-input handler
 func _unhandled_key_input(event):
@@ -174,13 +183,9 @@ func _on_tmb_loaded():
 
 
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
+	if reappearing_note == false :
+		redo_check()
 	
-	#Dew remove overwritten future undo/redo chain
-	if Global.UR[2] > 0 && reappearing_note == false :
-		Global.history = Global.history.slice(0,Global.revision,1,true)
-		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
-		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
-	###
 	var new_note : Note = note_scn.instantiate()
 	new_note.bar = bar
 	new_note.length = length
@@ -288,9 +293,7 @@ func UR_handler():
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				reappearing_note = true
-				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
-				reappearing_note = false
+				%Chart.add_child(Global.history[Global.revision-2])
 				
 				Global.revision -= 2
 				Global.UR[0] = 0
@@ -309,9 +312,7 @@ func UR_handler():
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
 				
-				reappearing_note = true
-				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
-				reappearing_note = false
+				%Chart.add_child(Global.history[Global.revision-1])
 				
 				Global.revision -= 1
 				Global.UR[0] = 0
@@ -327,12 +328,10 @@ func UR_handler():
 				print("redo dragged")
 				passed_note = Global.a_array[Global.revision+1]
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
-				filicide(Global.history[Global.revision])
+				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
 				
-				reappearing_note = true
-				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
-				reappearing_note = false
+				%Chart.add_child(Global.history[Global.revision+1])
 				
 				Global.revision += 2
 				Global.UR[2] -= 1
@@ -344,9 +343,7 @@ func UR_handler():
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
 				
-				reappearing_note = true
-				add_note(false, passed_note[0], passed_note[1], passed_note[2], passed_note[3])
-				reappearing_note = false
+				%Chart.add_child(Global.history[Global.revision])
 				
 				Global.revision += 1
 				Global.UR[2] -= 1
