@@ -36,12 +36,8 @@ func bar_to_x(bar:float): return bar * bar_spacing
 
 ###Dew's variables###
 var new_array := []
-var target_note := []
 var dumb_copy := []
-var bar_array := [] #list of bars
-var drag_available := false
 var short_stack = 0
-var prev_bar #bar of clearable note
 var reappearing_note = false
 ###
 
@@ -183,9 +179,12 @@ func _on_tmb_loaded():
 
 
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
-	if reappearing_note == false :
-		redo_check()
 	
+	if Global.UR[2] > 0 :
+		Global.history = Global.history.slice(0,Global.revision,1,true)
+		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
+		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
+		
 	var new_note : Note = note_scn.instantiate()
 	new_note.bar = bar
 	new_note.length = length
@@ -198,7 +197,6 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	if doot_enabled: doot(pitch)
 	add_child(new_note)
 	#new_note.grab_focus()
-	if reappearing_note == true: return
 
 # !! unused
 func stepped_note_overlaps(time:float, length:float, exclude : Array = []) -> bool:
@@ -244,22 +242,8 @@ func update_note_array():
 		]
 		print(note_array)
 		new_array.append(note_array)
-	#Dew debug and list of note starts with changes(bar_array) 
-		#bar_array.append(note_array[0])
-		#bar_array.sort()
-		bar_array = [note_array[0]]
+
 		Global.main_stack = new_array
-	if false:
-		print("Notes Dictionary: ", Global.history)
-		print(Global.revision)
-		var da_note = Global.relevant_notes.find_key(bar_array[0])
-		print(da_note)
-		print("da_note type: ",typeof(da_note))
-		print("%Chart type: ",typeof(%Chart))
-		print(%Chart.get_children())
-		filicide(da_note)
-		print("bar_array: ",bar_array)
-		print(%Chart.get_children())
 	
 	###
 	
@@ -282,7 +266,6 @@ func UR_handler():
 	print("pre-history: ",Global.history)
 	var passed_note = []
 	var drag_UR = false
-	var old_note : Note
 	if Global.UR[0] == 1 :
 		print("UR Undo! ")
 		if Global.revision > 1:
