@@ -194,11 +194,8 @@ func stuff_note(child_note, data_array):
 
 func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
 	
-	if Global.UR[2] > 0 :
-		Global.history = Global.history.slice(0,Global.revision,1,true)
-		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
-		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
-		
+	redo_check()
+	
 	var new_note : Note = note_scn.instantiate()
 	new_note.bar = bar
 	new_note.length = length
