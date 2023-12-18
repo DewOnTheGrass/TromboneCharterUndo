@@ -70,7 +70,7 @@ func try_to_load_wav(path:String) -> int:
 		print("stream null?")
 		return ERR_FILE_CANT_READ
 	elif stream.data == null || stream.data.is_empty():
-		print("no data? (o_O)")
+		print("no data?")
 		return ERR_FILE_CANT_READ
 	
 	%WavPlayer.stream = stream
