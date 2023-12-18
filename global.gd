@@ -18,7 +18,6 @@ const NUM_KEYS = 27
 var settings : Settings
 func beat_to_time(beat:float) -> float: return beat / (working_tmb.tempo / 60.0)
 func time_to_beat(time:float) -> float: return time * (60.0 / working_tmb.tempo)
-
 ### Dew's variables ###
 var UR := [0,0,0]
 	# 0   => normal operation
