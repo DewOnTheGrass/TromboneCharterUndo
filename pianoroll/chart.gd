@@ -82,6 +82,7 @@ func redo_check():
 		Global.history = Global.history.slice(0,Global.revision,1,true)
 		Global.a_array = Global.a_array.slice(0,Global.revision,1,true)
 		Global.d_array = Global.d_array.slice(0,Global.revision,1,true)
+		Global.UR[2] = 0
 	return
 	###
 
@@ -241,8 +242,8 @@ func update_note_array():
 	if Global.deleted:
 		filicide(Global.d_note)
 	new_array = []
-	print("Hi, I'm Tom Scott, and today I'm here in func update_note_array()")
-	print(Global.h_dict)
+	#print("Hi, I'm Tom Scott, and today I'm here in func update_note_array()")
+	#print(Global.h_dict)
 	for note in get_children():
 		
 		#Dew add check for undo/redo
@@ -265,7 +266,7 @@ func update_note_array():
 	tmb.notes = new_array
 	
 	#Dew direct to undo/redo
-	print("tmb.notes: ",tmb.notes)
+	#print("tmb.notes: ",tmb.notes)
 	
 	if Global.UR[0] > 0 :
 		UR_handler()
@@ -282,7 +283,7 @@ func UR_handler():
 	var passed_note = []
 	var drag_UR = false
 	if Global.UR[0] == 1 :
-		print("UR Undo! ")
+		#print("UR Undo! ")
 		if Global.revision > 1:
 			if Global.a_array[Global.revision-2] == Global.respects :
 				print("undo dragged")
@@ -290,7 +291,7 @@ func UR_handler():
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.a_array[Global.revision-1]))
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
-				
+				### NEED TO REPLACE WITH FUNCTION TO REMOVE OLD NOTE WITH OLD DATA AND ADD FRESH NOTE WITH NEW DATA
 				stuff_note(Global.history[Global.revision-2],passed_note)
 				
 				Global.revision -= 2
@@ -309,7 +310,7 @@ func UR_handler():
 			elif Global.a_array[Global.revision-1] == Global.ratio:
 				print("undo deleted")
 				passed_note = Global.d_array[Global.revision-1]
-				
+				### NEED TO REPLACE WITH FUNCTION TO REMOVE OLD NOTE WITH OLD DATA AND ADD FRESH NOTE WITH NEW DATA
 				stuff_note(Global.history[Global.revision-1],passed_note)
 				
 				Global.revision -= 1
@@ -320,7 +321,7 @@ func UR_handler():
 		tmb.notes = dumb_copy
 		
 	if Global.UR[0] == 2 :
-		print("UR Redo! ",Global.UR[1])
+		print("UR Redo![1]: ",Global.UR[1])
 		if Global.UR[1] == 2 :
 			if Global.a_array[Global.revision] == Global.respects :
 				print("redo dragged")
@@ -328,7 +329,7 @@ func UR_handler():
 				Global.main_stack.remove_at(Global.main_stack.bsearch(Global.d_array[Global.revision]))
 				filicide(Global.history[Global.revision-1])
 				Global.main_stack.append(passed_note)
-				
+				### NEED TO REPLACE WITH FUNCTION TO REMOVE OLD NOTE WITH OLD DATA AND ADD FRESH NOTE WITH NEW DATA
 				stuff_note(Global.history[Global.revision+1],passed_note)
 				
 				Global.revision += 2
@@ -340,7 +341,7 @@ func UR_handler():
 				print("redo added")
 				passed_note = Global.a_array[Global.revision]
 				Global.main_stack.append(passed_note)
-				
+				### NEED TO REPLACE WITH FUNCTION TO REMOVE OLD NOTE WITH OLD DATA AND ADD FRESH NOTE WITH NEW DATA
 				stuff_note(Global.history[Global.revision],passed_note)
 				
 				Global.revision += 1
@@ -360,7 +361,7 @@ func UR_handler():
 		tmb.notes = dumb_copy
 	
 	print("post-history: ",Global.history)
-	print("chart: ",%Chart.get_children())
+	#print("chart: ",%Chart.get_children())
 	print("revision post-UR: ",Global.revision)
 	
 	Global.UR[0] = 0
