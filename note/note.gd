@@ -246,6 +246,7 @@ func _end_drag():
 	#print(proper_note)
 	if starting_note != proper_note :
 		if dragged:
+			### NEED TO REPLACE WITH FUNCTION TO REMOVE OLD NOTE WITH OLD DATA AND ADD FRESH NOTE WITH NEW DATA
 			Global.history.append(Global.old_note)
 			Global.h_dict[Global.old_note] = Global.revision
 			Global.revision += 1
