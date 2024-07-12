@@ -98,7 +98,6 @@ mode_overrides_title = false
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.tmb")
-show_hidden_files = true
 
 [node name="SaveDialog" type="FileDialog" parent="."]
 unique_name_in_owner = true
@@ -108,7 +107,6 @@ ok_button_text = "Save"
 mode_overrides_title = false
 access = 2
 filters = PackedStringArray("*.tmb")
-show_hidden_files = true
 
 [node name="ErrorPopup" type="AcceptDialog" parent="."]
 unique_name_in_owner = true
@@ -333,9 +331,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(110, 0)
 layout_mode = 2
 size_flags_vertical = 2
-tooltip_text = "-tooltip_text = \"Swap between chart info (such as length and bpm) and editor settings (such as timing snap and .wav loading).\"
-text = \"Go to Editor\""
-text = "Go to Info"
+text = "Edit Mode"
 
 [node name="LoadChart" type="Button" parent="Settings/MarginC/HBoxC/Buttons"]
 layout_mode = 2
@@ -391,7 +387,7 @@ field_name = "Genre"
 
 [node name="Description" type="TextEdit" parent="Settings/MarginC/HBoxC/ChartInfo/SongInfo"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 0)
+custom_minimum_size = Vector2(240, 70)
 layout_mode = 2
 size_flags_vertical = 3
 placeholder_text = "Description"
