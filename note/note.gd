@@ -23,7 +23,7 @@ var pitch_start : float:
 		_update()
 var pitch_delta : float:
 	set(value):
-		if value != pitch_delta && doot_enabled:
+		if value != pitch_delta && doot_enabled && !Global.in_ur:
 			chart.doot(pitch_start + value)
 		pitch_delta = value
 		_update()
@@ -213,7 +213,7 @@ func _end_drag():
 	dragging = DRAG_NONE
 	print("Fresh note? ",Global.fresh)
 	slide_helper.snap_near_pitches()
-	if !Input.is_key_pressed(KEY_ALT):
+	if Global.settings.propagate_slide_changes:
 		slide_helper.pass_on_slide_propagation()
 	update_touching_notes()
 	clicking = false
@@ -254,7 +254,6 @@ func remove_note():                #Dew: We cannot use queue_free(), because we 
 	Global.changes.append([[self,self.bar]]) #... via the note's object reference.
 	Global.revision += 1
 	chart.remove_child(self)
-	print(propagate_to_the_right("find_idx_in_slide"))
 	chart.update_note_array()
 
 
@@ -262,11 +261,7 @@ func _snap_near_pitches(): slide_helper.snap_near_pitches()
 
 
 func has_slide_neighbor(direction:int,pitch:float):
-	match direction:
-		START_IS_TOUCHING:
-			return touching_notes.has(direction) && touching_notes[direction].end_pitch == pitch
-		END_IS_TOUCHING:
-			return touching_notes.has(direction) && touching_notes[direction].pitch_start == pitch
+	return slide_helper.has_slide_neighbor(direction,pitch)
 
 
 func update_touching_notes():

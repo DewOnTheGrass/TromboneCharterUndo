@@ -50,9 +50,10 @@ func bar_to_x(bar:float): return bar * bar_spacing
 @onready var tmb : TMBInfo:
 	get: return Global.working_tmb
 
-
-var EDIT_MODE := 0
-var SELECT_MODE := 1
+enum {
+	EDIT_MODE,
+	SELECT_MODE,
+}
 var mouse_mode : int = EDIT_MODE
 var show_preview : bool = false
 var playhead_preview : float = 0.0
@@ -122,6 +123,7 @@ func _shortcut_input(event):
 
 ##Dew's favorite child :)
 func ur_handler():
+	Global.in_ur = true
 	print("UR entered with action: ", action,"!") #[add, del, drag, paste]
 	print("Global.revision: ", Global.revision," which acts on revision #: ", rev)
 	print("Selected data:", Global.changes[rev])
@@ -144,12 +146,12 @@ func ur_handler():
 				for note in Global.changes[rev]:
 					print("UR dragging (undo)!")
 					stuffed_note = note[REF]
-					add_note(false, note[OLD][0], note[OLD][1], note[OLD][2], note[OLD][3], true)
+					add_note(false, note[OLD][0], note[OLD][1], note[OLD][2], note[OLD][3])
 			else:		#redo
 				for note in Global.changes[rev]:
 					print("UR dragging (redo)!")
 					stuffed_note = note[REF]
-					add_note(false, note[NEW][0], note[NEW][1], note[NEW][2], note[NEW][3], true)
+					add_note(false, note[NEW][0], note[NEW][1], note[NEW][2], note[NEW][3])
 		3: #paste desired note(s)
 			var notes_new = Global.changes[rev][act]
 			print("URing the copypasta (replace)!")
@@ -170,6 +172,7 @@ func ur_handler():
 				clearing_notes = false
 	act = -1
 	update_note_array()
+	Global.in_ur = false
 
 
 func redraw_notes():
@@ -250,7 +253,7 @@ func _on_tmb_loaded():
 	_on_tmb_updated()
 
 
-func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0, never_doot:=false):
+func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta:float = 0.0):
 	var note : Note
 	if act == -1: note = note_scn.instantiate()
 	else:         note = stuffed_note #Dew: don't create a new note if we're mid-U/R action; we track pre-existing notes via Global.changes when we remove them.
@@ -261,7 +264,9 @@ func add_note(start_drag:bool, bar:float, length:float, pitch:float, pitch_delta
 	note.position.x = bar_to_x(bar)
 	note.position.y = pitch_to_height(pitch)
 	note.dragging = Note.DRAG_INITIAL if start_drag else Note.DRAG_NONE
-	if doot_enabled && !never_doot: doot(pitch)
+	if doot_enabled && !Global.in_ur && !Global.pasting: doot(pitch)
+	if Global.in_ur && settings.length.value < tmb.get_last_note_off():
+		settings.length.value = max(2,ceilf(tmb.get_last_note_off()))
 	if act == -1: add_child(note) #Dew: We don't want to re-add the child to the parent if the data was only changed via drag; it's still on-screen.
 	else: return
 	note.grab_focus()
@@ -289,11 +294,11 @@ func update_note_array():
 	var new_array := []
 	###Dew timeline tracker
 	var i := -1
-	print("Hi, I'm Tom Scott, and today I'm in func update_note_array()")
+	#print("Hi, I'm Tom Scott, and today I'm in func update_note_array()")
 	print("action timeline: ",Global.actions)
-	for change in Global.changes:
-		i += 1
-		print(i,": ",change)
+	#for change in Global.changes:
+		#i += 1
+		#print(i,": ",change)
 	print("terminal revision: ",Global.revision)
 	###
 	for note in get_children():
@@ -342,22 +347,20 @@ func assign_tt_note_ids():
 func _draw():
 	var font : Font = ThemeDB.get_fallback_font()
 	if tmb == null: return
-	if settings.section_length:
-		var section_rect = Rect2(bar_to_x(settings.section_start), 1,
-				bar_to_x(settings.section_length), size.y)
-		draw_rect(section_rect, Color(0.3, 0.9, 1.0, 0.1))
-		draw_rect(section_rect, Color.CORNFLOWER_BLUE, false, 3.0)
-	if show_preview:
-		var mouse_pos = get_local_mouse_position()
-		if get_rect().has_point(mouse_pos):
-			draw_line(Vector2(mouse_pos.x,0), Vector2(mouse_pos.x,size.y),
-						Color.ORANGE_RED, 1 )
-		# no way to change the delay on a per-node basis, it seems
-		ProjectSettings.set_setting('gui/timers/tooltip_delay_sec', 0)
-		tooltip_text = ("%.4f" % %Chart.x_to_bar(mouse_pos.x)).rstrip('0.')
-	else:
-		ProjectSettings.set_setting('gui/timers/tooltip_delay_sec', 0.5)
-		tooltip_text = ""
+	var section_rect = Rect2(bar_to_x(settings.section_start), 1,
+			bar_to_x(settings.section_length), size.y)
+	draw_rect(section_rect, Color(0.3, 0.9, 1.0, 0.1))
+	draw_rect(section_rect, Color.CORNFLOWER_BLUE, false, 3.0)
+	var rect_bumps_pos = Vector2(section_rect.position.x+0.5,size.y/2+3)
+	draw_line(rect_bumps_pos+Vector2(-5,-5),
+			rect_bumps_pos+Vector2(0,-5),Color.CORNFLOWER_BLUE,3.0)
+	draw_line(rect_bumps_pos+Vector2(-5,5),
+			rect_bumps_pos+Vector2(0,5),Color.CORNFLOWER_BLUE,3.0)
+	rect_bumps_pos.x += section_rect.size.x
+	draw_line(rect_bumps_pos+Vector2(0,-5),
+			rect_bumps_pos+Vector2(4,-5),Color.CORNFLOWER_BLUE,3.0)
+	draw_line(rect_bumps_pos+Vector2(0,5),
+			rect_bumps_pos+Vector2(4,5),Color.CORNFLOWER_BLUE,3.0)
 	if %PreviewController.is_playing:
 		if settings.section_length:
 			draw_line(Vector2(bar_to_x(%PreviewController.song_position),0),
@@ -365,6 +368,7 @@ func _draw():
 					Color.CORNFLOWER_BLUE, 2 )
 		else:
 			settings.playhead_pos = %PreviewController.song_position
+	# Draw bar lines
 	for i in tmb.endpoint + 1:
 		var line_x = i * bar_spacing
 		var next_line_x = (i + 1) * bar_spacing
@@ -390,9 +394,29 @@ func _draw():
 					str(i / tmb.timesig), HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
 			draw_string(font, Vector2(i * bar_spacing, 0) + Vector2(8, 32),
 					str(i), HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
-		draw_line(Vector2(bar_to_x(%PlayheadPos.value), 0),
-				Vector2(bar_to_x(%PlayheadPos.value), size.y),
-				Color.ORANGE_RED, 2.0)
+	# End drawing bar lines
+	if show_preview:
+		var mouse_pos = get_local_mouse_position()
+		if get_rect().has_point(mouse_pos):
+			draw_line(Vector2(mouse_pos.x,0), Vector2(mouse_pos.x,size.y),
+						Color.ORANGE_RED, 1 )
+		# no way to change the delay on a per-node basis, it seems
+		ProjectSettings.set_setting('gui/timers/tooltip_delay_sec', 0)
+		tooltip_text = ("%.4f" % x_to_bar(mouse_pos.x)).rstrip('0.')
+	else:
+		ProjectSettings.set_setting('gui/timers/tooltip_delay_sec', 0.5)
+		tooltip_text = ""
+	var playhead_pos = Vector2(bar_to_x(%PlayheadPos.value),0)
+	draw_line(playhead_pos,
+			playhead_pos + Vector2.DOWN*size.y,
+			Color.ORANGE_RED, 2.0)
+	if !%PreviewController.is_playing:
+		var play_symbol_size := 10
+		var play_symbol := [ playhead_pos,
+							playhead_pos+Vector2(play_symbol_size/1.33,play_symbol_size/2),
+							playhead_pos+Vector2(0,play_symbol_size) ]
+		draw_colored_polygon(play_symbol, Color.ORANGE_RED)
+		draw_polyline(play_symbol, Color.ORANGE_RED,0.5,true)
 
 
 func count_onscreen_notes() -> int:
@@ -402,7 +426,8 @@ func count_onscreen_notes() -> int:
 	return accum
 
 func update_playhead(event):
-	var bar = %Chart.x_to_bar(event.position.x)
+	var bar = x_to_bar(event.position.x)
+	if settings.snap_time: bar = snapped(bar,current_subdiv)
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
@@ -440,7 +465,7 @@ func _gui_input(event):
 			var bar = %Chart.x_to_bar(event.position.x)
 			if bar < 0:
 				bar = 0
-			if settings.snap_time: bar = snapped(bar, %Chart.current_subdiv)
+			if settings.snap_time: bar = snapped(bar, current_subdiv)
 			if event is InputEventMouseButton && event.button_index == MOUSE_BUTTON_LEFT && event.pressed:
 				prev_section_start = bar
 				settings.section_start = bar
@@ -498,8 +523,7 @@ func _on_mouse_exited():
 	show_preview = false
 	queue_redraw()
 
-
-func _on_mouse_entered():
-	if Input.is_key_pressed(KEY_SHIFT):
-		show_preview = true
-		queue_redraw()
+#func _on_mouse_entered():
+	#if Input.is_key_pressed(KEY_SHIFT):
+		#show_preview = true
+		#queue_redraw()

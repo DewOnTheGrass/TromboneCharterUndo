@@ -581,6 +581,7 @@ layout_mode = 2
 
 [node name="BuildWaveform" type="CheckBox" parent="Settings/MarginC/HBoxC/EditSettings/HBox"]
 unique_name_in_owner = true
+layout_mode = 2
 size_flags_horizontal = 0
 tooltip_text = "Requires ffmpeg."
 button_pressed = true
@@ -820,12 +821,15 @@ text = "toot toot lol"
 [connection signal="size_changed" from="DiffCalc" to="." method="_on_diff_calc_win_size_changed"]
 [connection signal="meta_clicked" from="DiffCalc/PanelContainer/VBoxContainer/PanelContainer/CalcInfo" to="." method="_on_rich_text_label_meta_clicked"]
 [connection signal="pressed" from="DiffCalc/PanelContainer/VBoxContainer/Button" to="." method="_on_diff_ok_button_pressed"]
+[connection signal="mouse_entered" from="PianoRoll/ChartView/Chart" to="PianoRoll/ChartView/Chart" method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="PianoRoll/ChartView/Chart" to="PianoRoll/ChartView/Chart" method="_on_mouse_exited"]
 [connection signal="pressed" from="Settings/MarginC/HBoxC/Buttons/ViewSwitcher" to="Settings" method="_on_view_switcher_pressed"]
 [connection signal="pressed" from="Settings/MarginC/HBoxC/Buttons/LoadChart" to="." method="_on_load_chart_pressed"]
 [connection signal="pressed" from="Settings/MarginC/HBoxC/Buttons/SaveChart" to="." method="_on_save_chart_pressed"]
 [connection signal="pressed" from="Settings/MarginC/HBoxC/Buttons/NewChart" to="." method="_on_new_chart_pressed"]
 [connection signal="text_changed" from="Settings/MarginC/HBoxC/ChartInfo/SongInfo/Description" to="." method="_on_description_text_changed"]
 [connection signal="pressed" from="Settings/MarginC/HBoxC/ChartInfo/SongInfo/TootTallyUpload" to="Settings/MarginC/HBoxC/ChartInfo/SongInfo/TootTallyUpload" method="_on_toottally_upload_pressed"]
+[connection signal="gui_input" from="Settings/MarginC/HBoxC/ChartInfo/SongInfo2/Length" to="Settings" method="_on_length_gui_input"]
 [connection signal="color_changed" from="Settings/MarginC/HBoxC/ChartInfo/ColorSettings/Colors/StartColor" to="Settings/MarginC/HBoxC/ChartInfo/ColorSettings/ColorPreview" method="_on_colors_changed"]
 [connection signal="color_changed" from="Settings/MarginC/HBoxC/ChartInfo/ColorSettings/Colors/EndColor" to="Settings/MarginC/HBoxC/ChartInfo/ColorSettings/ColorPreview" method="_on_colors_changed"]
 [connection signal="value_changed" from="Settings/MarginC/HBoxC/EditSettings/ZoomEntry/ZoomLevel" to="Settings" method="_on_zoom_level_changed"]
