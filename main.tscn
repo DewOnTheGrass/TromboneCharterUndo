@@ -96,7 +96,6 @@ mode_overrides_title = false
 file_mode = 0
 access = 2
 filters = PackedStringArray("*.tmb")
-show_hidden_files = true
 
 [node name="SaveDialog" type="FileDialog" parent="."]
 unique_name_in_owner = true
@@ -106,7 +105,6 @@ ok_button_text = "Save"
 mode_overrides_title = false
 access = 2
 filters = PackedStringArray("*.tmb")
-show_hidden_files = true
 
 [node name="ErrorPopup" type="AcceptDialog" parent="."]
 unique_name_in_owner = true
